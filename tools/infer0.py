@@ -15,10 +15,6 @@ from yolov6.utils.events import LOGGER
 from yolov6.core.inferer import Inferer
 
 
-import cv2
-cap_i = cv2.VideoCapture(0)
-
-
 def get_args_parser(add_help=True):
     parser = argparse.ArgumentParser(description='YOLOv6 PyTorch Inference.', add_help=add_help)
     parser.add_argument('--weights', type=str, default='weights/yolov6s.pt', help='model path(s) for inference.')
@@ -32,8 +28,7 @@ def get_args_parser(add_help=True):
     parser.add_argument('--device', default='0', help='device to run our model i.e. 0 or 0,1,2,3 or cpu.')
     parser.add_argument('--save-txt', action='store_true', help='save results to *.txt.')
     parser.add_argument('--save-img', action='store_false', help='save visuallized inference results.')
-    # parser.add_argument('--classes', nargs='+', type=int, help='filter by classes, e.g. --classes 0, or --classes 0 2 3.')
-    parser.add_argument('--classes', default=0, nargs='+', type=int, help='filter by classes, e.g. --classes 0, or --classes 0 2 3.')
+    parser.add_argument('--classes', nargs='+', type=int, help='filter by classes, e.g. --classes 0, or --classes 0 2 3.')
     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS.')
     parser.add_argument('--project', default='runs/inference', help='save inference results to project/name.')
     parser.add_argument('--name', default='exp', help='save inference results to project/name.')

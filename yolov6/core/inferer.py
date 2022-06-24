@@ -56,18 +56,28 @@ class Inferer:
 
     def infer(self, conf_thres, iou_thres, classes, agnostic_nms, max_det, save_dir, save_txt, save_img, hide_labels, hide_conf):
         ''' Model Inference and results visualization '''
+        # for img_path in tqdm(self.img_paths):
 
-        for img_path in tqdm(self.img_paths):
-            img, img_src = self.precess_image(img_path, self.img_size, self.stride, self.half)
+        cap_i = cv2.VideoCapture(0)
+
+        while True:
+            ref, frame = cap_i.read()
+
+            # img, img_src = self.precess_image(img_path, self.img_size, self.stride, self.half)
+            img, img_src = self.precess_image(frame, self.img_size, self.stride, self.half)
             img = img.to(self.device)
+
             if len(img.shape) == 3:
                 img = img[None]
                 # expand for batch dim
             pred_results = self.model(img)
+
+            # print('pred_results = ', pred_results)
+
             det = non_max_suppression(pred_results, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)[0]
 
-            save_path = osp.join(save_dir, osp.basename(img_path))  # im.jpg
-            txt_path = osp.join(save_dir, 'labels', osp.basename(img_path).split('.')[0])
+            # save_path = osp.join(save_dir, osp.basename(img_path))  # im.jpg
+            # txt_path = osp.join(save_dir, 'labels', osp.basename(img_path).split('.')[0])
 
             gn = torch.tensor(img_src.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             img_ori = img_src
@@ -80,11 +90,12 @@ class Inferer:
                 det[:, :4] = self.rescale(img.shape[2:], det[:, :4], img_src.shape).round()
 
                 for *xyxy, conf, cls in reversed(det):
-                    if save_txt:  # Write to file
-                        xywh = (self.box_convert(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
-                        line = (cls, *xywh, conf)
-                        with open(txt_path + '.txt', 'a') as f:
-                            f.write(('%g ' * len(line)).rstrip() % line + '\n')
+                    pass
+                    # if save_txt:  # Write to file
+                    #     xywh = (self.box_convert(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                    #     line = (cls, *xywh, conf)
+                    #     with open(txt_path + '.txt', 'a') as f:
+                    #         f.write(('%g ' * len(line)).rstrip() % line + '\n')
 
                     if save_img:
                         class_num = int(cls)  # integer class
@@ -96,14 +107,16 @@ class Inferer:
 
                 # Save results (image with detections)
                 if save_img:
-                    cv2.imwrite(save_path, img_src)
+                    # cv2.imwrite(save_path, img_src)
+                    cv2.imshow('yolov6', img_src)
+                    cv2.waitKey(1)  # 1 millisecond
 
     @staticmethod
-    def precess_image(path, img_size, stride, half):
+    def precess_image(frame, img_size, stride, half):
         '''Process image before image inference.'''
         try:
-            img_src = cv2.imread(path)
-            assert img_src is not None, f'Invalid image: {path}'
+            img_src = frame
+            # assert img_src is not None, f'Invalid image: {path}'
         except Exception as e:
             LOGGER.Warning(e)
         image = letterbox(img_src, img_size, stride=stride)[0]
